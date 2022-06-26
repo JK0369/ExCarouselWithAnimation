@@ -23,8 +23,8 @@ class ViewController: UIViewController {
   private let collectionViewFlowLayout: UICollectionViewFlowLayout = {
     let layout = UICollectionViewFlowLayout()
     layout.scrollDirection = .horizontal
-    layout.itemSize = Const.itemSize
-    layout.minimumLineSpacing = Const.itemSpacing
+    layout.itemSize = Const.itemSize // <-
+    layout.minimumLineSpacing = Const.itemSpacing // <-
     layout.minimumInteritemSpacing = 0
     return layout
   }()
@@ -79,7 +79,7 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
     withVelocity velocity: CGPoint,
     targetContentOffset: UnsafeMutablePointer<CGPoint>
   ) {
-    let scrolledOffsetX = targetContentOffset.pointee.x + scrollView.contentInset.left // (insetX만큼 contentInset을 적용했으므로 여기에도 추가)
+    let scrolledOffsetX = targetContentOffset.pointee.x + scrollView.contentInset.left
     let cellWidth = Const.itemSize.width + Const.itemSpacing
     let index = round(scrolledOffsetX / cellWidth)
     targetContentOffset.pointee = CGPoint(x: index * cellWidth - scrollView.contentInset.left, y: scrollView.contentInset.top)
