@@ -44,7 +44,10 @@ class ViewController: UIViewController {
     return view
   }()
   
-  private var items = (0...100).map { _ in randomColor }
+  private var items = (0...100).map { _ in
+    MyModel(color: randomColor, isDimmed: true)
+  }
+  private var previousIndex: Int?
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -68,7 +71,7 @@ extension ViewController: UICollectionViewDataSource {
   }
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MyCollectionViewCell.id, for: indexPath) as! MyCollectionViewCell
-    cell.prepare(color: self.items[indexPath.item])
+    cell.prepare(color: self.items[indexPath.item].color, isDimmed: self.items[indexPath.item].isDimmed)
     return cell
   }
 }
@@ -84,6 +87,21 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
     let index = round(scrolledOffsetX / cellWidth)
     targetContentOffset.pointee = CGPoint(x: index * cellWidth - scrollView.contentInset.left, y: scrollView.contentInset.top)
   }
+  
+  func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    let scrolledOffset = scrollView.contentOffset.x + scrollView.contentInset.left
+    let cellWidth = Const.itemSize.width + Const.itemSpacing
+    let index = Int(round(scrolledOffset / cellWidth))
+    self.items[index].isDimmed = false
+    
+    defer { self.previousIndex = index }
+    guard
+      let previousIndex = self.previousIndex,
+      previousIndex != index
+    else { return }
+    self.items[previousIndex].isDimmed = true
+    self.collectionView.reloadData()
+  }
 }
 
 final class MyCollectionViewCell: UICollectionViewCell {
@@ -92,6 +110,12 @@ final class MyCollectionViewCell: UICollectionViewCell {
   // MARK: UI
   private let myView: UIView = {
     let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    return view
+  }()
+  private let dimmedView: UIView = {
+    let view = UIView()
+    view.backgroundColor = .black.withAlphaComponent(0.45)
     view.translatesAutoresizingMaskIntoConstraints = false
     return view
   }()
@@ -106,22 +130,31 @@ final class MyCollectionViewCell: UICollectionViewCell {
     super.init(frame: frame)
     
     self.contentView.addSubview(self.myView)
+    self.contentView.addSubview(self.dimmedView)
+    
     NSLayoutConstraint.activate([
       self.myView.leftAnchor.constraint(equalTo: self.contentView.leftAnchor),
       self.myView.rightAnchor.constraint(equalTo: self.contentView.rightAnchor),
       self.myView.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor),
       self.myView.topAnchor.constraint(equalTo: self.contentView.topAnchor),
     ])
+    NSLayoutConstraint.activate([
+      self.dimmedView.leftAnchor.constraint(equalTo: self.contentView.leftAnchor),
+      self.dimmedView.rightAnchor.constraint(equalTo: self.contentView.rightAnchor),
+      self.dimmedView.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor),
+      self.dimmedView.topAnchor.constraint(equalTo: self.contentView.topAnchor),
+    ])
   }
   
   override func prepareForReuse() {
     super.prepareForReuse()
     
-    self.prepare(color: nil)
+    self.prepare(color: nil, isDimmed: true)
   }
   
-  func prepare(color: UIColor?) {
+  func prepare(color: UIColor?, isDimmed: Bool) {
     self.myView.backgroundColor = color
+    self.dimmedView.isHidden = !isDimmed
   }
 }
 
