@@ -94,13 +94,16 @@ extension ViewController: UICollectionViewDelegateFlowLayout {
     let index = Int(round(scrolledOffset / cellWidth))
     self.items[index].isDimmed = false
     
-    defer { self.previousIndex = index }
+    defer {
+      self.previousIndex = index
+      self.collectionView.reloadData()
+    }
+    
     guard
       let previousIndex = self.previousIndex,
       previousIndex != index
     else { return }
     self.items[previousIndex].isDimmed = true
-    self.collectionView.reloadData()
   }
 }
 
@@ -151,7 +154,7 @@ final class MyCollectionViewCell: UICollectionViewCell {
     
     self.prepare(color: nil, isDimmed: true)
   }
-  
+
   func prepare(color: UIColor?, isDimmed: Bool) {
     self.myView.backgroundColor = color
     self.dimmedView.isHidden = !isDimmed
